@@ -8,6 +8,7 @@
 __pycache__/*
 database/*
 env_mvp
+log/*
 
 # Compiled Java class files
 *.class
