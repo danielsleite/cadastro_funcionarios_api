@@ -298,13 +298,12 @@ def altera_dados(form: FuncionarioSchema):
         # Salva o CPF do funcionario para fazer a relaçaõ entra a tebela pessoa e a tabela funcionario
         cpf = funcionario.cpf
 
-        # realiza o reset da senha, se o flag estiver ativo
-        # senha = form.senha
-        # if form.alterar_senha:
-        #     senha = "123456"
-
         # criando conexão com a base
         session = Session()
+
+        # realiza o reset da senha, se o flag estiver ativo
+
+
         session.query(Funcionario).filter(Funcionario.cpf == cpf).update(
             {
                 Funcionario.matricula: form.matricula,
@@ -315,6 +314,8 @@ def altera_dados(form: FuncionarioSchema):
                 Funcionario.alterar_senha: form.alterar_senha,
             }
         )
+
+
 
         session.query(Pessoa).filter(Pessoa.cpf == cpf).update(
             {
