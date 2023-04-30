@@ -299,9 +299,9 @@ def altera_dados(form: FuncionarioSchema):
         cpf = funcionario.cpf
 
         # realiza o reset da senha, se o flag estiver ativo
-        senha = form.alterar_senha
-        if form.alterar_senha:
-            senha = "123456"
+        # senha = form.senha
+        # if form.alterar_senha:
+        #     senha = "123456"
 
         # criando conexão com a base
         session = Session()
@@ -312,7 +312,6 @@ def altera_dados(form: FuncionarioSchema):
                 Funcionario.cpf: form.cpf,
                 Funcionario.email: form.email,
                 Funcionario.cadastrado_por: form.cadastrado_por,
-                Funcionario.senha: senha,
                 Funcionario.alterar_senha: form.alterar_senha,
             }
         )
