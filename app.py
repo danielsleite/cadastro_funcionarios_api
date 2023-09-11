@@ -45,17 +45,13 @@ def add_funcionario(form: FuncionarioSchema):
     """
 
     funcionario = Funcionario(
-        nome=form.nome,
         cpf=form.cpf,
-        endereco=form.endereco,
         funcao=form.funcao,
         email=form.email,
         login=form.login,
         matricula=form.matricula,
-        cadastrado_por=form.cadastrado_por,
-        alterar_senha=True,
     )
-    logger.debug(f"Tentativa de adicionar funcionario de nome: '{funcionario.nome}'")
+    logger.debug(f"Tentativa de adicionar funcionario de cpf: '{funcionario.cpf}'")
     logger.warning(apresenta_funcionario(funcionario))
     try:
         # criando conexão com a base
@@ -67,20 +63,20 @@ def add_funcionario(form: FuncionarioSchema):
         # efetivando o camando de adição de novo item na tabela
         session.commit()
 
-        logger.debug(f"Adicionado funcionario de nome: '{funcionario.nome}'")
+        logger.debug(f"Adicionado funcionario de nome: '{funcionario.cpf}'")
         return apresenta_funcionario(funcionario), 200
 
     except IntegrityError as e:
         # como a duplicidade do nome é a provável razão do IntegrityError
         error_msg = "Funcionario de mesmo nome já salvo na base :/"
-        logger.warning(f"Erro tentar cadastrar: '{funcionario.nome}', {error_msg}")
+        logger.warning(f"Erro tentar cadastrar: '{funcionario.cpf}', {error_msg}")
         return {"message": error_msg}, 409
 
     except Exception as e:
         # caso um erro fora do previsto
         error_msg = "Não foi possível salvar novo item :/"
         logger.warning(
-            f"Erro ao tentar cadastrar o funcionario: '{funcionario.nome}', {error_msg}"
+            f"Erro ao tentar cadastrar o funcionario: '{funcionario.cpf}', {error_msg}"
         )
         return {"message": error_msg}, 400
 
@@ -146,124 +142,124 @@ def get_funcionario(form: FuncionarioBuscaSchema):
         return apresenta_funcionario(funcionario), 200
 
 
-@app.get(
-    "/senha",
-    tags=[funcionario_tag],
-    responses={"200": InterfaceParaSenha, "404": ErrorSchema},
-)
-def get_senha(query: FuncionarioBuscaSchema):
-    """Busca a senha do usuario, dado a informacao de login
+# @app.get(
+#     "/senha",
+#     tags=[funcionario_tag],
+#     responses={"200": InterfaceParaSenha, "404": ErrorSchema},
+# )
+# def get_senha(query: FuncionarioBuscaSchema):
+#     """Busca a senha do usuario, dado a informacao de login
 
-    Retorna uma string com a senha do usiario.
-    """
+#     Retorna uma string com a senha do usiario.
+#     """
 
-    funcionario_login = query.login
-    funcionario = busca_por_login(funcionario_login)
+#     funcionario_login = query.login
+#     funcionario = busca_por_login(funcionario_login)
 
-    if not funcionario:
-        # se o produto não foi encontrado
-        error_msg = "Funcionario não encontrado na base :/"
-        logger.warning(f"Erro ao buscar login '{funcionario_login}', {error_msg}")
-        return {"message": error_msg}, 404
-    else:
-        logger.debug(f"Senha: '{funcionario.senha}'")
-        # retorna a representação de produto
-        return apresenta_senha(funcionario), 200
-
-
-@app.post(
-    "/login",
-    tags=[funcionario_tag],
-    responses={"200": RetornoLoginValido, "204": RetornoLoginNaoValido},
-)
-def get_login(form: InterfaceParaLogin):
-    """Envia os dados de login e senha do usuário, para validação com a interface.
-
-    Retorna um dicionário com a informação de login realizado e o status de reset de senha.
-    """
-
-    logger.debug(f"Validando login do funcionario:  #{form.login}")
-    # criando conexão com a base
-    session = Session()
-    # fazendo a busca
-    funcionario = (
-        session.query(Funcionario)
-        .filter(Funcionario.login == form.login)
-        .filter(Funcionario.senha == form.senha)
-        .first()
-    )
-
-    if not funcionario:
-        # se o produto não foi encontrado
-        error_msg = "Funcionario não encontrado na base :/"
-        logger.warning(
-            f"Erro ao buscar login '{form.login}' e senha '{form.senha}', {error_msg}"
-        )
-        return {"logado": False, "alterar_senha": funcionario.alterar_senha}, 204
-
-    else:
-        # logger.warning(f"Login realizado com sucesso'{form.login}' e senha '{form.senha}', {error_msg}")
-        logger.warning(f"Logado: '{funcionario.login}'")
-        # retorna a representação de produto
-        return {"logado": True, "alterar_senha": funcionario.alterar_senha}, 200
+#     if not funcionario:
+#         # se o produto não foi encontrado
+#         error_msg = "Funcionario não encontrado na base :/"
+#         logger.warning(f"Erro ao buscar login '{funcionario_login}', {error_msg}")
+#         return {"message": error_msg}, 404
+#     else:
+#         logger.debug(f"Senha: '{funcionario.senha}'")
+#         # retorna a representação de produto
+#         return apresenta_senha(funcionario), 200
 
 
-@app.put(
-    "/senha",
-    tags=[funcionario_tag],
-    responses={
-        "200": FuncionarioViewSchema,
-        "404": ErrorSchema,
-        "400": ErrorSchema,
-    },
-)
-def altera_senha(form: FuncionarioSenhaNovaSchema):
-    """Altera a senha de um dado funcioanrio, a partir da informação de login do mesmo.
-      Caso a flag de reset esteja ativa, o senha colocada será a senha padrão '123456'
+# @app.post(
+#     "/login",
+#     tags=[funcionario_tag],
+#     responses={"200": RetornoLoginValido, "204": RetornoLoginNaoValido},
+# )
+# def get_login(form: InterfaceParaLogin):
+#     """Envia os dados de login e senha do usuário, para validação com a interface.
 
-    Retorna uma representação dos funcionarios.
-    """
+#     Retorna um dicionário com a informação de login realizado e o status de reset de senha.
+#     """
 
-    funcionario_login = form.login
-    funcionario = busca_por_login(funcionario_login)
-    nova_senha = form.senha
-    if form.alterar_senha:
-        nova_senha = "123456"
+#     logger.debug(f"Validando login do funcionario:  #{form.login}")
+#     # criando conexão com a base
+#     session = Session()
+#     # fazendo a busca
+#     funcionario = (
+#         session.query(Funcionario)
+#         .filter(Funcionario.login == form.login)
+#         .filter(Funcionario.senha == form.senha)
+#         .first()
+#     )
 
-    if not funcionario:
-        # se o produto não foi encontrado
-        error_msg = "Funcionario não encontrado na base :/"
-        logger.warning(f"Erro ao buscar login '{funcionario_login}', {error_msg}")
-        return {"message": error_msg}, 404
+#     if not funcionario:
+#         # se o produto não foi encontrado
+#         error_msg = "Funcionario não encontrado na base :/"
+#         logger.warning(
+#             f"Erro ao buscar login '{form.login}' e senha '{form.senha}', {error_msg}"
+#         )
+#         return {"logado": False, "alterar_senha": funcionario.alterar_senha}, 204
 
-    try:
-        # criando conexão com a base
-        session = Session()
-        session.query(Funcionario).filter(
-            Funcionario.login == funcionario_login
-        ).update(
-            {
-                Funcionario.senha: nova_senha,
-                Funcionario.alterar_senha: form.alterar_senha,
-            }
-        )
-        session.commit()
-        logger.debug(f"Alterada a senha do funcionario: '{funcionario.nome}'")
-        return apresenta_funcionario(funcionario), 200
+#     else:
+#         # logger.warning(f"Login realizado com sucesso'{form.login}' e senha '{form.senha}', {error_msg}")
+#         logger.warning(f"Logado: '{funcionario.login}'")
+#         # retorna a representação de produto
+#         return {"logado": True, "alterar_senha": funcionario.alterar_senha}, 200
 
-    except IntegrityError as e:
-        # como a duplicidade do nome é a provável razão do IntegrityError
-        error_msg = "Nao foi possivel alterar a senha do funcionario. Verifique se o campo login está correto.:/"
-        logger.warning(
-            f"Erro ao alterar senha do funcionario: '{funcionario.nome}', {error_msg}"
-        )
-        return {"message": error_msg}, 404
 
-    except Exception as e:
-        # caso um erro fora do previsto
-        error_msg = "Erro ao atualizar a senha :/"
-        logger.warning(f"Erro ao alterar a senha do '{funcionario.nome}', {error_msg}")
-        return {"message": error_msg}, 400
+# @app.put(
+#     "/senha",
+#     tags=[funcionario_tag],
+#     responses={
+#         "200": FuncionarioViewSchema,
+#         "404": ErrorSchema,
+#         "400": ErrorSchema,
+#     },
+# )
+# def altera_senha(form: FuncionarioSenhaNovaSchema):
+#     """Altera a senha de um dado funcioanrio, a partir da informação de login do mesmo.
+#       Caso a flag de reset esteja ativa, o senha colocada será a senha padrão '123456'
+
+#     Retorna uma representação dos funcionarios.
+#     """
+
+#     funcionario_login = form.login
+#     funcionario = busca_por_login(funcionario_login)
+#     nova_senha = form.senha
+#     if form.alterar_senha:
+#         nova_senha = "123456"
+
+#     if not funcionario:
+#         # se o produto não foi encontrado
+#         error_msg = "Funcionario não encontrado na base :/"
+#         logger.warning(f"Erro ao buscar login '{funcionario_login}', {error_msg}")
+#         return {"message": error_msg}, 404
+
+#     try:
+#         # criando conexão com a base
+#         session = Session()
+#         session.query(Funcionario).filter(
+#             Funcionario.login == funcionario_login
+#         ).update(
+#             {
+#                 Funcionario.senha: nova_senha,
+#                 Funcionario.alterar_senha: form.alterar_senha,
+#             }
+#         )
+#         session.commit()
+#         logger.debug(f"Alterada a senha do funcionario: '{funcionario.nome}'")
+#         return apresenta_funcionario(funcionario), 200
+
+#     except IntegrityError as e:
+#         # como a duplicidade do nome é a provável razão do IntegrityError
+#         error_msg = "Nao foi possivel alterar a senha do funcionario. Verifique se o campo login está correto.:/"
+#         logger.warning(
+#             f"Erro ao alterar senha do funcionario: '{funcionario.nome}', {error_msg}"
+#         )
+#         return {"message": error_msg}, 404
+
+#     except Exception as e:
+#         # caso um erro fora do previsto
+#         error_msg = "Erro ao atualizar a senha :/"
+#         logger.warning(f"Erro ao alterar a senha do '{funcionario.nome}', {error_msg}")
+#         return {"message": error_msg}, 400
 
 
 @app.put(
@@ -310,20 +306,19 @@ def altera_dados(form: FuncionarioSchema):
                 Funcionario.funcao: form.funcao,
                 Funcionario.cpf: form.cpf,
                 Funcionario.email: form.email,
-                Funcionario.cadastrado_por: form.cadastrado_por,
-                Funcionario.alterar_senha: form.alterar_senha,
+                Funcionario.login: form.login
+                # Funcionario.cadastrado_por: form.cadastrado_por,
+                # Funcionario.alterar_senha: form.alterar_senha,
             }
         )
 
-
-
-        session.query(Pessoa).filter(Pessoa.cpf == cpf).update(
-            {
-                Pessoa.nome: form.nome,
-                Pessoa.cpf: form.cpf,
-                Pessoa.endereco: form.endereco,
-            }
-        )
+        # session.query(Pessoa).filter(Pessoa.cpf == cpf).update(
+        #     {
+        #         Pessoa.nome: form.nome,
+        #         Pessoa.cpf: form.cpf,
+        #         Pessoa.endereco: form.endereco,
+        #     }
+        # )
 
         session.commit()
 
@@ -385,7 +380,7 @@ def exclui_funcionario(query: FuncionarioBuscaSchema):
         session = Session()
 
         session.query(Funcionario).filter(Funcionario.cpf == cpf).delete()
-        session.query(Pessoa).filter(Pessoa.cpf == cpf).delete()
+        # session.query(Pessoa).filter(Pessoa.cpf == cpf).delete()
 
         session.commit()
 
