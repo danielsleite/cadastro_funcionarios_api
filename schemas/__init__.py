@@ -2,6 +2,7 @@
 from schemas.funcionario import (
     FuncionarioSchema,
     FuncionarioBuscaSchema,
+    FuncionarioBuscaCpfSchema,
     FuncionarioViewSchema,
     ListagemFuncionariosSchema,
     # FuncionarioSenhaNovaSchema,

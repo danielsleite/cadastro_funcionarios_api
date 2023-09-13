@@ -5,8 +5,6 @@ import os
 
 # importando os elementos definidos no modelo
 from model.base import Base
-# from model.acesso import Acesso
-from model.pessoa import Pessoa
 from model.funcionario import Funcionario
 
 

@@ -4,7 +4,7 @@ from urllib.parse import unquote
 
 from sqlalchemy.exc import IntegrityError
 
-from model import Session, Funcionario, Pessoa
+from model import Session, Funcionario
 
 from logger import logger
 from schemas import *
@@ -271,7 +271,7 @@ def get_funcionario(form: FuncionarioBuscaSchema):
         "404": ErrorSchema,
     },
 )
-def altera_dados(form: FuncionarioSchema):
+def altera_dados(query: FuncionarioBuscaCpfSchema, form: FuncionarioSchema):
     """Altera os dados cadastrais do funcionário.
 
     Recebe os dados de funcionário e utiliza o campo login para busca do funcionário.
@@ -281,30 +281,27 @@ def altera_dados(form: FuncionarioSchema):
     Retorna uma representação do funcionario.
     """
 
-    funcionario_login = form.login
-    funcionario = busca_por_login(funcionario_login)
+    funcionario_cpf = query.cpf
+    funcionario = busca_por_cpf(funcionario_cpf)
 
     if not funcionario:
         # se o produto não foi encontrado
         error_msg = "Funcionario não encontrado na base :/"
-        logger.warning(f"Erro ao buscar login '{funcionario_login}', {error_msg}")
+        logger.warning(f"Erro ao buscar cpf '{funcionario_cpf}', {error_msg}")
         return {"mesage": error_msg}, 404
 
     try:
-        # Salva o CPF do funcionario para fazer a relaçaõ entra a tebela pessoa e a tabela funcionario
-        cpf = funcionario.cpf
-
         # criando conexão com a base
         session = Session()
 
         # realiza o reset da senha, se o flag estiver ativo
 
 
-        session.query(Funcionario).filter(Funcionario.cpf == cpf).update(
+        session.query(Funcionario).filter(Funcionario.cpf == funcionario_cpf).update(
             {
                 Funcionario.matricula: form.matricula,
                 Funcionario.funcao: form.funcao,
-                Funcionario.cpf: form.cpf,
+                # Funcionario.cpf: form.cpf,
                 Funcionario.email: form.email,
                 Funcionario.login: form.login
                 # Funcionario.cadastrado_por: form.cadastrado_por,
@@ -323,9 +320,9 @@ def altera_dados(form: FuncionarioSchema):
         session.commit()
 
         # Faz uma nova busca no banco para imprimir o resultado atualzado
-        funcionario_atualizado = busca_por_login(funcionario_login)
+        funcionario_atualizado = busca_por_cpf(funcionario_cpf)
         logger.debug(
-            f"Alterados os dados o funcionario: '{funcionario_atualizado.nome}'"
+            f"Alterados os dados o funcionario: '{funcionario_atualizado.login}'"
         )
         return apresenta_funcionario(funcionario_atualizado), 200
 
@@ -333,7 +330,7 @@ def altera_dados(form: FuncionarioSchema):
         # como a duplicidade do nome é a provável razão do IntegrityError
         error_msg = "Nao foi possivel alterar os dados do funcionario. Verifique se o campo login está correto.:/"
         logger.warning(
-            f"Erro ao alterar dados do funcionario: '{funcionario.nome}', {error_msg}"
+            f"Erro ao alterar dados do funcionario: '{funcionario.cpf}', {error_msg}"
         )
         return {"mesage": error_msg}, 404
 
@@ -341,7 +338,7 @@ def altera_dados(form: FuncionarioSchema):
         # caso um erro fora do previsto
         error_msg = "Erro ao atualizar os dados do funcionario :/"
         logger.warning(
-            f"Erro ao dados do funcionario: '{funcionario.nome}', {error_msg}"
+            f"Erro ao dados do funcionario: '{funcionario.cpf}', {error_msg}"
         )
         return {"mesage": error_msg}, 400
 
@@ -409,9 +406,18 @@ def exclui_funcionario(query: FuncionarioBuscaSchema):
 
 # Função auxiliar para buscar funcionário
 def busca_por_login(login: str) -> Funcionario:
-    logger.debug(f"Procurando senha do funcionario de login:  #{login}")
+    logger.debug(f"Procurando funcionario de login:  #{login}")
     # criando conexão com a base
     session = Session()
     # fazendo a busca
     funcionario = session.query(Funcionario).filter(Funcionario.login == login).first()
+    return funcionario
+
+# Função auxiliar para buscar funcionário
+def busca_por_cpf(cpf: str) -> Funcionario:
+    logger.debug(f"Procurando funcionário de cpf:  #{cpf}")
+    # criando conexão com a base
+    session = Session()
+    # fazendo a busca
+    funcionario = session.query(Funcionario).filter(Funcionario.cpf == cpf).first()
     return funcionario

@@ -6,7 +6,7 @@ from model import Funcionario
 class FuncionarioSchema(BaseModel):
     """Define como um novo funcionario a ser inserido deve ser representado"""
 
-    nome: str = "Joao da Silva"
+    # nome: str = "Joao da Silva"
     cpf: str = "123456789-10"
     # endereco: str = "Rua Alguma coisa, 22 Baixo: Qualquer Cidade: Alguma"
     funcao: str = "Operador"
@@ -24,6 +24,14 @@ class FuncionarioBuscaSchema(BaseModel):
     """
 
     login: str = "jsilva"
+    
+class FuncionarioBuscaCpfSchema(BaseModel):
+    """Define como deve ser a estrutura que representa a busca do funcinário.
+    
+    A busca é feita baseada no login do funcionario
+    """
+
+    cpf: str = "123456789-10"
 
 
 # class FuncionarioSenhaNovaSchema(BaseModel):
@@ -104,7 +112,7 @@ def apresenta_funcionarios(funcionarios: List[Funcionario]):
 def apresenta_funcionario(funcionario: Funcionario):
     """Retorna os campos que representam o funcionaro."""
     return {
-        "nome": funcionario.nome,
+        # "nome": funcionario.nome,
         "cpf": funcionario.cpf,
         # "endereco": funcionario.endereco,
         "funcao": funcionario.funcao,
