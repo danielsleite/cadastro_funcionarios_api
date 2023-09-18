@@ -6,15 +6,12 @@ from model import Funcionario
 class FuncionarioSchema(BaseModel):
     """Define como um novo funcionario a ser inserido deve ser representado"""
 
-    # nome: str = "Joao da Silva"
+    nome: str = "Joao da Silva"
     cpf: str = "123456789-10"
-    # endereco: str = "Rua Alguma coisa, 22 Baixo: Qualquer Cidade: Alguma"
     funcao: str = "Operador"
     matricula: int = 12345
     email: str = "joao.silva@empresa.com"
     login: str = "jsilva"
-    # alterar_senha: bool = True
-    # cadastrado_por: str = "Admin"
 
 
 class FuncionarioBuscaSchema(BaseModel):
@@ -89,14 +86,29 @@ class FuncionarioViewSchema(BaseModel):
 
     nome: str = "Joao da Silva"
     cpf: str = "123456789-10"
-    # endereco: str = "Rua Alguma coisa, 22 Baixo: Qualquer Cidade: Alguma"
     funcao: str = "Operador"
     matricula: int = 12345
     email: str = "joao.silva@empresa.com"
     login: str = "jsilva"
-    # senha: str = "*******"
-    # alterar_senha: bool = True
-    # cadastrado_por: str = "Admin"
+
+    
+class FuncionarioCompletoViewSchema(BaseModel):
+    """Define como um funcinário será retornado"""
+
+    nome: str = "Joao da Silva"
+    cpf: str = "123456789-10"
+    cep: str = "12345-678"
+    rua: str = "Rua Alguma coisa, 22 Baixo: Qualquer Cidade: Alguma"
+    bairro: str = "Centro"
+    cidade: str = "Rio de Janeiro"
+    estado: str = "RJ"
+    funcao: str = "Operador"
+    matricula: int = 12345
+    email: str = "joao.silva@empresa.com"
+    login: str = "jsilva"
+    alterar_senha: bool = True
+    cadastrado_por: str = "Admin"
+
 
 
 def apresenta_funcionarios(funcionarios: List[Funcionario]):
@@ -119,10 +131,45 @@ def apresenta_funcionario(funcionario: Funcionario):
         "matricula": funcionario.matricula,
         "email": funcionario.email,
         "login": funcionario.login,
-        # "cadastrato_por": funcionario.cadastrado_por,
+        # "cadastrado_por": funcionario.cadastrado_por,
         # "alterar_senha": funcionario.alterar_senha,
     }
 
+
+
+def apresenta_funcionario_completo(funcionario: Funcionario, pessoa:dict, login: dict):
+    """Retorna os campos que representam o funcionaro."""
+    return {
+        "nome": pessoa["nome"],
+        "cpf": funcionario.cpf,
+        "cep": pessoa["cep"],
+        "rua": pessoa["rua"],
+        "bairro": pessoa["bairro"],
+        "cidade": pessoa["cidade"],
+        "estado": pessoa["estado"],
+        "funcao": funcionario.funcao,
+        "matricula": funcionario.matricula,
+        "email": funcionario.email,
+        "login": funcionario.login,
+        "cadastrado_por": login["cadastrado_por"],
+        "alterar_senha": login["alterar_senha"],
+    }
+    
+def apresenta_funcionario_completo_sem_api_login(funcionario: Funcionario, pessoa:dict):
+    """Retorna os campos que representam o funcionaro."""
+    return {
+        "nome": pessoa["nome"],
+        "cpf": funcionario.cpf,
+        "cep": pessoa["cep"],
+        "rua": pessoa["rua"],
+        "bairro": pessoa["bairro"],
+        "cidade": pessoa["cidade"],
+        "estado": pessoa["estado"],
+        "funcao": funcionario.funcao,
+        "matricula": funcionario.matricula,
+        "email": funcionario.email,
+        "login": funcionario.login,
+    }
 
 # def apresenta_senha(funcionario: Funcionario):
 #     """Retorna uma string com a senha do usuario

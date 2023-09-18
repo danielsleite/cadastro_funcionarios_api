@@ -6,6 +6,8 @@ from sqlalchemy.exc import IntegrityError
 
 from model import Session, Funcionario
 
+import requests, json
+
 from logger import logger
 from schemas import *
 from flask_cors import CORS
@@ -68,7 +70,7 @@ def add_funcionario(form: FuncionarioSchema):
 
     except IntegrityError as e:
         # como a duplicidade do nome é a provável razão do IntegrityError
-        error_msg = "Funcionario de mesmo nome já salvo na base :/"
+        error_msg = "Funcionario de mesmo nome já salvo na base"
         logger.warning(f"Erro tentar cadastrar: '{funcionario.cpf}', {error_msg}")
         return {"message": error_msg}, 409
 
@@ -107,14 +109,13 @@ def get_funcionarios():
         print(funcionarios)
         return apresenta_funcionarios(funcionarios), 200
 
-
 @app.post(
     "/ficha",
     tags=[funcionario_tag],
     responses={"200": FuncionarioViewSchema, "404": ErrorSchema},
 )
 def get_funcionario(form: FuncionarioBuscaSchema):
-    """Realiza a leitura dos dados cadastrais de um dado funcionário
+    """Realiza a leitura dos dados cadastrais de um dado funcionário, apenas dados da tabela funcionário
 
     Utiliza como campo de busca, o login do funcionário
     Retorna os dados do funcionário, em casso de sucesso, ou uma mensagem de erro, em caso de falha,
@@ -141,126 +142,61 @@ def get_funcionario(form: FuncionarioBuscaSchema):
         # retorna a representação de produto
         return apresenta_funcionario(funcionario), 200
 
+@app.post(
+    "/ficha_completa",
+    tags=[funcionario_tag],
+    responses={"200": FuncionarioCompletoViewSchema, "404": ErrorSchema},
+)
+def get_funcionario_completo(form: FuncionarioBuscaSchema):
+    """Realiza a leitura dos dados cadastrais de um dado funcionário.
+    
+       Se conecta a API pessoas, para fazer a busca dos dados pessoais do funcionário 
 
-# @app.get(
-#     "/senha",
-#     tags=[funcionario_tag],
-#     responses={"200": InterfaceParaSenha, "404": ErrorSchema},
-# )
-# def get_senha(query: FuncionarioBuscaSchema):
-#     """Busca a senha do usuario, dado a informacao de login
+        Utiliza como campo de busca, o login do funcionário
+        Retorna os dados do funcionário + dados pessoais, em casso de sucesso, ou uma mensagem de erro, em caso de falha,
 
-#     Retorna uma string com a senha do usiario.
-#     """
+    """
 
-#     funcionario_login = query.login
-#     funcionario = busca_por_login(funcionario_login)
+    logger.debug(f"Validando login do funcionario:  #{form.login}")
+    # criando conexão com a base
+    session = Session()
+    # fazendo a busca
+    funcionario = (
+        session.query(Funcionario).filter(Funcionario.login == form.login).first()
+    )
 
-#     if not funcionario:
-#         # se o produto não foi encontrado
-#         error_msg = "Funcionario não encontrado na base :/"
-#         logger.warning(f"Erro ao buscar login '{funcionario_login}', {error_msg}")
-#         return {"message": error_msg}, 404
-#     else:
-#         logger.debug(f"Senha: '{funcionario.senha}'")
-#         # retorna a representação de produto
-#         return apresenta_senha(funcionario), 200
+    if not funcionario:
+        # se o produto não foi encontrado
+        error_msg = "Funcionario não encontrado na base :/"
+        logger.warning(f"Erro ao buscar login '{form.login}', {error_msg}")
+        return {"message": error_msg}, 404
 
-
-# @app.post(
-#     "/login",
-#     tags=[funcionario_tag],
-#     responses={"200": RetornoLoginValido, "204": RetornoLoginNaoValido},
-# )
-# def get_login(form: InterfaceParaLogin):
-#     """Envia os dados de login e senha do usuário, para validação com a interface.
-
-#     Retorna um dicionário com a informação de login realizado e o status de reset de senha.
-#     """
-
-#     logger.debug(f"Validando login do funcionario:  #{form.login}")
-#     # criando conexão com a base
-#     session = Session()
-#     # fazendo a busca
-#     funcionario = (
-#         session.query(Funcionario)
-#         .filter(Funcionario.login == form.login)
-#         .filter(Funcionario.senha == form.senha)
-#         .first()
-#     )
-
-#     if not funcionario:
-#         # se o produto não foi encontrado
-#         error_msg = "Funcionario não encontrado na base :/"
-#         logger.warning(
-#             f"Erro ao buscar login '{form.login}' e senha '{form.senha}', {error_msg}"
-#         )
-#         return {"logado": False, "alterar_senha": funcionario.alterar_senha}, 204
-
-#     else:
-#         # logger.warning(f"Login realizado com sucesso'{form.login}' e senha '{form.senha}', {error_msg}")
-#         logger.warning(f"Logado: '{funcionario.login}'")
-#         # retorna a representação de produto
-#         return {"logado": True, "alterar_senha": funcionario.alterar_senha}, 200
-
-
-# @app.put(
-#     "/senha",
-#     tags=[funcionario_tag],
-#     responses={
-#         "200": FuncionarioViewSchema,
-#         "404": ErrorSchema,
-#         "400": ErrorSchema,
-#     },
-# )
-# def altera_senha(form: FuncionarioSenhaNovaSchema):
-#     """Altera a senha de um dado funcioanrio, a partir da informação de login do mesmo.
-#       Caso a flag de reset esteja ativa, o senha colocada será a senha padrão '123456'
-
-#     Retorna uma representação dos funcionarios.
-#     """
-
-#     funcionario_login = form.login
-#     funcionario = busca_por_login(funcionario_login)
-#     nova_senha = form.senha
-#     if form.alterar_senha:
-#         nova_senha = "123456"
-
-#     if not funcionario:
-#         # se o produto não foi encontrado
-#         error_msg = "Funcionario não encontrado na base :/"
-#         logger.warning(f"Erro ao buscar login '{funcionario_login}', {error_msg}")
-#         return {"message": error_msg}, 404
-
-#     try:
-#         # criando conexão com a base
-#         session = Session()
-#         session.query(Funcionario).filter(
-#             Funcionario.login == funcionario_login
-#         ).update(
-#             {
-#                 Funcionario.senha: nova_senha,
-#                 Funcionario.alterar_senha: form.alterar_senha,
-#             }
-#         )
-#         session.commit()
-#         logger.debug(f"Alterada a senha do funcionario: '{funcionario.nome}'")
-#         return apresenta_funcionario(funcionario), 200
-
-#     except IntegrityError as e:
-#         # como a duplicidade do nome é a provável razão do IntegrityError
-#         error_msg = "Nao foi possivel alterar a senha do funcionario. Verifique se o campo login está correto.:/"
-#         logger.warning(
-#             f"Erro ao alterar senha do funcionario: '{funcionario.nome}', {error_msg}"
-#         )
-#         return {"message": error_msg}, 404
-
-#     except Exception as e:
-#         # caso um erro fora do previsto
-#         error_msg = "Erro ao atualizar a senha :/"
-#         logger.warning(f"Erro ao alterar a senha do '{funcionario.nome}', {error_msg}")
-#         return {"message": error_msg}, 400
-
+    else:
+        
+        url_pessoa = f"http://127.0.0.1:5001/pessoa?cpf={funcionario.cpf}"
+        logger.warning("Fazendo busca por dados pessoais: " + url_pessoa)
+        response = requests.get(url_pessoa)
+        if response.status_code == 200:
+            pessoa = json.loads(response.text)
+            
+            url_login = "http://127.0.0.1:5000/login"
+            formdata = {'login': funcionario.login}
+            r_post = requests.post(url_login, json = formdata)
+            
+            if r_post.status_code == 200:
+                login = json.loads(r_post.text)
+                # logger.warning(f"Login realizado com sucesso'{form.login}' e senha '{form.senha}', {error_msg}")
+                logger.warning(f"Carregando funcionario: '{funcionario.login}'")
+                
+                logger.warning(f"\n\\ Campo Login buscado: '{login}'")
+                
+                return apresenta_funcionario_completo(funcionario, pessoa, login), 200    
+            else:
+                error_msg = "Não foi possível buscar a base de login do funcionario:/"
+                return {"message": error_msg}, 404
+        else:
+            error_msg = "Não foi possível buscar a base de dados pessoais:/"
+            return {"message": error_msg}, 404
 
 @app.put(
     "/atualiza",
@@ -286,7 +222,7 @@ def altera_dados(query: FuncionarioBuscaCpfSchema, form: FuncionarioSchema):
 
     if not funcionario:
         # se o produto não foi encontrado
-        error_msg = "Funcionario não encontrado na base :/"
+        error_msg = "Funcionario não encontrado na base"
         logger.warning(f"Erro ao buscar cpf '{funcionario_cpf}', {error_msg}")
         return {"mesage": error_msg}, 404
 
@@ -301,22 +237,11 @@ def altera_dados(query: FuncionarioBuscaCpfSchema, form: FuncionarioSchema):
             {
                 Funcionario.matricula: form.matricula,
                 Funcionario.funcao: form.funcao,
-                # Funcionario.cpf: form.cpf,
                 Funcionario.email: form.email,
                 Funcionario.login: form.login
-                # Funcionario.cadastrado_por: form.cadastrado_por,
-                # Funcionario.alterar_senha: form.alterar_senha,
             }
         )
-
-        # session.query(Pessoa).filter(Pessoa.cpf == cpf).update(
-        #     {
-        #         Pessoa.nome: form.nome,
-        #         Pessoa.cpf: form.cpf,
-        #         Pessoa.endereco: form.endereco,
-        #     }
-        # )
-
+        
         session.commit()
 
         # Faz uma nova busca no banco para imprimir o resultado atualzado
@@ -377,7 +302,6 @@ def exclui_funcionario(query: FuncionarioBuscaSchema):
         session = Session()
 
         session.query(Funcionario).filter(Funcionario.cpf == cpf).delete()
-        # session.query(Pessoa).filter(Pessoa.cpf == cpf).delete()
 
         session.commit()
 

@@ -4,6 +4,7 @@ from schemas.funcionario import (
     FuncionarioBuscaSchema,
     FuncionarioBuscaCpfSchema,
     FuncionarioViewSchema,
+    FuncionarioCompletoViewSchema,
     ListagemFuncionariosSchema,
     # FuncionarioSenhaNovaSchema,
     # InterfaceParaSenha,
@@ -12,6 +13,8 @@ from schemas.funcionario import (
     # RetornoLoginNaoValido,
     apresenta_funcionario,
     apresenta_funcionarios,
+    apresenta_funcionario_completo,
+    apresenta_funcionario_completo_sem_api_login,
     # apresenta_senha,
 )
 from schemas.error import ErrorSchema
