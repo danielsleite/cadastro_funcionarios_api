@@ -17,7 +17,7 @@ Para interação da API com o banco e front-end, foram criadas diversas rodas, e
 
 >**/ficha** - para obter os dados de cadastro de um dado funcionário
 
->**/ficha_completa** - para obter os dados do funcionário salvos por essas api e pelas APIs [api_login](https://github.com/danielsleite/api_login) e [API Cadastro Pessoas](https://github.com/danielsleite/api_cadastro_pessoas
+>**/ficha_completa** - para obter os dados do funcionário salvos por essas api e pelas APIs [api_login](https://github.com/danielsleite/api_login) e [API Cadastro Pessoas](https://github.com/danielsleite/api_cadastro_pessoas)
 
 >**/excluir** - para apagar um funcionário
 
@@ -61,6 +61,12 @@ Para versão `Swagger` abra o link [http://localhost:5002/openapi/swagger#/](htt
 
 Certifique-se de ter o [Docker](https://docs.docker.com/engine/install/) instalado e em execução em sua máquina.
 
+Caso não exista, crie uma interface de rede no docker para servir de ponte entre as demais APIs.
+
+```
+$ docker network create --driver=bridge minha-rede
+```
+
 Navegue até o diretório que contém o Dockerfile e o requirements.txt no terminal.
 Execute **como administrador** o seguinte comando para construir a imagem Docker:
 
@@ -71,7 +77,7 @@ $ docker build -t api-cadastro-funcionarios .
 Uma vez criada a imagem, para executar o container basta executar, **como administrador**, seguinte o comando:
 
 ```
-$ docker run -p 5002:5002 api-cadastro-funcionarios
+$ docker run -d -e DOCKER_ENV=true --name=api_funcionario_ip --network=minha-rede -p 5002:5002 api-cadastro-funcionarios
 ```
 
 Uma vez executando, para acessar a API, basta abrir o [http://localhost:5002/#/](http://localhost:5002/#/) no navegador.

@@ -6,15 +6,27 @@ from sqlalchemy.exc import IntegrityError
 
 from model import Session, Funcionario
 
-import requests, json
+import requests, json, os
 
 from logger import logger
 from schemas import *
 from flask_cors import CORS
 
+
+if os.getenv("DOCKER_ENV") == "true":
+    HOST_LOGIN = "api_login_ip"
+    HOST_PESSOA = "api_pessoas_ip"
+    print("\nHost login docker")
+else:
+    HOST_LOGIN = "127.0.0.1"
+    HOST_PESSOA = "127.0.0.1"
+    print("\nHost local")
+
+
 info = Info(title="API Cadastro de funcionarios. Autor: Daniel Leite", version="1.0.0")
 app = OpenAPI(__name__, info=info)
 CORS(app)
+
 
 # definindo tags
 home_tag = Tag(
@@ -109,6 +121,7 @@ def get_funcionarios():
         print(funcionarios)
         return apresenta_funcionarios(funcionarios), 200
 
+
 @app.post(
     "/ficha",
     tags=[funcionario_tag],
@@ -142,6 +155,7 @@ def get_funcionario(form: FuncionarioBuscaSchema):
         # retorna a representação de produto
         return apresenta_funcionario(funcionario), 200
 
+
 @app.post(
     "/ficha_completa",
     tags=[funcionario_tag],
@@ -149,11 +163,11 @@ def get_funcionario(form: FuncionarioBuscaSchema):
 )
 def get_funcionario_completo(form: FuncionarioBuscaSchema):
     """Realiza a leitura dos dados cadastrais de um dado funcionário.
-    
-       Se conecta a API pessoas, para fazer a busca dos dados pessoais do funcionário 
 
-        Utiliza como campo de busca, o login do funcionário
-        Retorna os dados do funcionário + dados pessoais, em casso de sucesso, ou uma mensagem de erro, em caso de falha,
+    Se conecta a API pessoas, para fazer a busca dos dados pessoais do funcionário
+
+     Utiliza como campo de busca, o login do funcionário
+     Retorna os dados do funcionário + dados pessoais, em casso de sucesso, ou uma mensagem de erro, em caso de falha,
 
     """
 
@@ -172,31 +186,31 @@ def get_funcionario_completo(form: FuncionarioBuscaSchema):
         return {"message": error_msg}, 404
 
     else:
-        
-        url_pessoa = f"http://127.0.0.1:5001/pessoa?cpf={funcionario.cpf}"
+        url_pessoa = f"http://{HOST_PESSOA}:5001/pessoa?cpf={funcionario.cpf}"
         logger.warning("Fazendo busca por dados pessoais: " + url_pessoa)
         response = requests.get(url_pessoa)
         if response.status_code == 200:
             pessoa = json.loads(response.text)
-            
-            url_login = "http://127.0.0.1:5000/login"
-            formdata = {'login': funcionario.login}
-            r_post = requests.post(url_login, json = formdata)
-            
+
+            url_login = f"http://{HOST_LOGIN}:5000/login"
+            formdata = {"login": funcionario.login}
+            r_post = requests.post(url_login, json=formdata)
+
             if r_post.status_code == 200:
                 login = json.loads(r_post.text)
                 # logger.warning(f"Login realizado com sucesso'{form.login}' e senha '{form.senha}', {error_msg}")
                 logger.warning(f"Carregando funcionario: '{funcionario.login}'")
-                
+
                 logger.warning(f"\n\\ Campo Login buscado: '{login}'")
-                
-                return apresenta_funcionario_completo(funcionario, pessoa, login), 200    
+
+                return apresenta_funcionario_completo(funcionario, pessoa, login), 200
             else:
                 error_msg = "Não foi possível buscar a base de login do funcionario:/"
                 return {"message": error_msg}, 404
         else:
             error_msg = "Não foi possível buscar a base de dados pessoais:/"
             return {"message": error_msg}, 404
+
 
 @app.put(
     "/atualiza",
@@ -211,7 +225,7 @@ def altera_dados(query: FuncionarioBuscaCpfSchema, form: FuncionarioSchema):
     """Altera os dados cadastrais do funcionário.
 
     Recebe os dados de funcionário e utiliza o campo login para busca do funcionário.
-    
+
     Para alterar o login, é necessário excluir o cadastro do funcionário e criar um novo.
 
     Retorna uma representação do funcionario.
@@ -232,16 +246,15 @@ def altera_dados(query: FuncionarioBuscaCpfSchema, form: FuncionarioSchema):
 
         # realiza o reset da senha, se o flag estiver ativo
 
-
         session.query(Funcionario).filter(Funcionario.cpf == funcionario_cpf).update(
             {
                 Funcionario.matricula: form.matricula,
                 Funcionario.funcao: form.funcao,
                 Funcionario.email: form.email,
-                Funcionario.login: form.login
+                Funcionario.login: form.login,
             }
         )
-        
+
         session.commit()
 
         # Faz uma nova busca no banco para imprimir o resultado atualzado
@@ -336,6 +349,7 @@ def busca_por_login(login: str) -> Funcionario:
     # fazendo a busca
     funcionario = session.query(Funcionario).filter(Funcionario.login == login).first()
     return funcionario
+
 
 # Função auxiliar para buscar funcionário
 def busca_por_cpf(cpf: str) -> Funcionario:
