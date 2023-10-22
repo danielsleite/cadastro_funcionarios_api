@@ -303,17 +303,29 @@ def altera_dados(form: FuncionarioSchema):
 
         # realiza o reset da senha, se o flag estiver ativo
 
-
-        session.query(Funcionario).filter(Funcionario.cpf == cpf).update(
-            {
-                Funcionario.matricula: form.matricula,
-                Funcionario.funcao: form.funcao,
-                Funcionario.cpf: form.cpf,
-                Funcionario.email: form.email,
-                Funcionario.cadastrado_por: form.cadastrado_por,
-                Funcionario.alterar_senha: form.alterar_senha,
-            }
-        )
+        if form.alterar_senha:
+            session.query(Funcionario).filter(Funcionario.cpf == cpf).update(
+                {
+                    Funcionario.matricula: form.matricula,
+                    Funcionario.funcao: form.funcao,
+                    Funcionario.cpf: form.cpf,
+                    Funcionario.email: form.email,
+                    Funcionario.cadastrado_por: form.cadastrado_por,
+                    Funcionario.alterar_senha: form.alterar_senha,
+                    Funcionario.senha: "123456"
+                }
+            )
+        else:
+            session.query(Funcionario).filter(Funcionario.cpf == cpf).update(
+                {
+                    Funcionario.matricula: form.matricula,
+                    Funcionario.funcao: form.funcao,
+                    Funcionario.cpf: form.cpf,
+                    Funcionario.email: form.email,
+                    Funcionario.cadastrado_por: form.cadastrado_por,
+                    Funcionario.alterar_senha: form.alterar_senha,
+                }
+            )
 
 
 
